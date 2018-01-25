@@ -42,13 +42,15 @@ exports.authenticateUser = function (req, res) {
         res.status(500).json({success: false, msg: 'Failed to get user', error: err});
     }).then(function (isMatch) {
         if (isMatch) {
-            const token = jwt.sign({data: user}, config.secret, {
+            const token = jwt.sign({
+                data: getUserWithoutPassword(user)
+            }, config.secret, {
                 expiresIn: 604800
             });
             res.json({
                 success: true,
                 token: 'JWT ' + token,
-                user: user
+                user: getUserWithoutPassword(user)
             });
         }
         else {
@@ -75,7 +77,7 @@ exports.updateUser = function (req, res) {
         }).then(function () {
             return res.json({success: true, msg: 'User updated'});
         }, function (err) {
-            return res.status(500).json({success: false, msg: 'Failed to update user (pass)', error: err});
+            return res.status(500).json({success: false, msg: 'Failed to update user (Wpass)', error: err});
         });
     } else {
         promise = requestUpdateUser(req.params.id, req.body);
@@ -88,34 +90,68 @@ exports.updateUser = function (req, res) {
 };
 
 exports.getProfile = function (req, res) {
-    return (req.user) ? res.json({user: req.user.data}) : res.json({});
+    /*requestGetProfile(req.token).then(function (profile) {
+        return res.json(JSON.parse(profile));
+    })*/
+
+    return res.json((req.user) ? req.user.data : {});
 };
+
+/*const requestGetProfile = function(token){
+    const options = {
+        url: userServiceUrl +  '/profile',
+        headers: {'Authorization': token}
+    };
+    return request(options);
+};*/
 
 const requestAddUser = function (body) {
     const options = {
         url: userServiceUrl,
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': generateAuthServiceToken()
         },
         body: JSON.stringify(body)
     };
     return request.post(options);
 };
 
-const requestGetUserByEmail = function(email){
+const requestGetUserByEmail = function (email) {
     const options = {
-        url: userServiceUrl +  '/withpassword/' + email
+        url: userServiceUrl + '/withpassword/' + email,
+        headers: {'Authorization': generateAuthServiceToken()}
     };
     return request(options);
 };
 
-const requestUpdateUser = function(id, body){
+const requestUpdateUser = function (id, body) {
     const options = {
         url: userServiceUrl + '/' + id,
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': generateAuthServiceToken()
         },
         body: JSON.stringify(body)
     };
     return request.put(options);
+};
+
+const getUserWithoutPassword = function (user){
+    return {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role
+    }
+};
+
+const generateAuthServiceToken = function(){
+    return 'JWT ' + jwt.sign({
+        data: {role:'authservice'}
+    }, config.secret, {
+        expiresIn: 60
+    });
 };

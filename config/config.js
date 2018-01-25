@@ -1,3 +1,3 @@
 module.exports = {
-    secret: 'notpublic'
+    secret: process.env.SECRET || 'notpublic'
 };
