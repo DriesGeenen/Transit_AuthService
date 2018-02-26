@@ -33,31 +33,31 @@ exports.authenticateUser = function (req, res) {
 
     var promise = requestGetUserByEmail(email);
     promise.then(function (usr) {
-        if (!usr) {
-            return res.status(404).json({success: false, msg: 'User not found'});
-        }
         user = JSON.parse(usr).data;
-        return bcrypt.compare(password, user.password);
+
+        if(user === "Email not found"){
+            return res.status(200).json({success: false, msg: 'Invalid email'});
+        }
+
+        bcrypt.compare(password, user.password).then(function(ress){
+            if(ress){
+                const token = jwt.sign({
+                    data: getUserWithoutPassword(user)
+                }, config.secret, {
+                    expiresIn: 604800
+                });
+                res.json({
+                    success: true,
+                    token: 'JWT ' + token,
+                    user: getUserWithoutPassword(user)
+                });
+            } else {
+                return res.status(200).json({success: false, msg: 'Invalid password'});
+            }
+        });
+
     }, function (err) {
         res.status(500).json({success: false, msg: 'Failed to get user', error: err});
-    }).then(function (isMatch) {
-        if (isMatch) {
-            const token = jwt.sign({
-                data: getUserWithoutPassword(user)
-            }, config.secret, {
-                expiresIn: 604800
-            });
-            res.json({
-                success: true,
-                token: 'JWT ' + token,
-                user: getUserWithoutPassword(user)
-            });
-        }
-        else {
-            res.status(403).json({success: false, msg: 'Wrong password'});
-        }
-    }, function (err) {
-        res.status(500).json({success: false, msg: 'Failed to match passwords', error: err});
     });
 };
 
