@@ -1,7 +1,7 @@
 {
   "name": "AuthService",
   "version": "1.0.0",
-  "description": "Proof-of-concept authentication service for Agilians",
+  "description": "Proof-of-concept authorization service for Agilians",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

@@ -5,11 +5,10 @@ const config = require('../config/config');
 const jwt = require('jsonwebtoken');
 const request = require('request-promise');
 
-// todo fill in backup URL
 const userServiceUrl = process.env.USER_SERVICE_URL || 'http://localhost:6601/users';
 
 exports.registerUser = function (req, res) {
-    var promise = bcrypt.genSalt(10);
+    const promise = bcrypt.genSalt(10);
     promise.then(function (salt) {
         return bcrypt.hash(req.body.password, salt);
     }, function (err) {
@@ -29,9 +28,9 @@ exports.registerUser = function (req, res) {
 exports.authenticateUser = function (req, res) {
     const email = req.body.email;
     const password = req.body.password;
-    var user;
+    let user;
 
-    var promise = requestGetUserByEmail(email);
+    const promise = requestGetUserByEmail(email);
     promise.then(function (usr) {
         if (!usr) {
             return res.status(404).json({success: false, msg: 'User not found'});
@@ -62,7 +61,7 @@ exports.authenticateUser = function (req, res) {
 };
 
 exports.updateUser = function (req, res) {
-    var promise;
+    let promise;
     if (req.body.password) {
         promise = bcrypt.genSalt(10);
         promise.then(function (salt) {
@@ -145,7 +144,7 @@ const getUserWithoutPassword = function (user){
         email: user.email,
         phone: user.phone,
         role: user.role
-    }
+    };
 };
 
 const generateAuthServiceToken = function(){
